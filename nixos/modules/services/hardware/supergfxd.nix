@@ -9,6 +9,8 @@ in
     services.supergfxd = {
       enable = lib.mkEnableOption "the supergfxd service";
 
+      package = lib.mkPackageOption pkgs "supergfxctl" { };
+
       settings = lib.mkOption {
         type = lib.types.nullOr json.type;
         default = null;
@@ -21,7 +23,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    environment.systemPackages = [ pkgs.supergfxctl ];
+    environment.systemPackages = [ cfg.package ];
 
     environment.etc."supergfxd.conf" = lib.mkIf (cfg.settings != null) {
       source = json.generate "supergfxd.conf" cfg.settings;
@@ -30,13 +32,13 @@ in
 
     services.dbus.enable = true;
 
-    systemd.packages = [ pkgs.supergfxctl ];
+    systemd.packages = [ cfg.package ];
     systemd.services.supergfxd.wantedBy = [ "multi-user.target" ];
     systemd.services.supergfxd.path = [ pkgs.kmod pkgs.pciutils ];
 
-    services.dbus.packages = [ pkgs.supergfxctl ];
-    services.udev.packages = [ pkgs.supergfxctl ];
+    services.dbus.packages = [ cfg.package ];
+    services.udev.packages = [ cfg.package ];
   };
 
-  meta.maintainers = pkgs.supergfxctl.meta.maintainers;
+  meta.maintainers = cfg.package.meta.maintainers;
 }
